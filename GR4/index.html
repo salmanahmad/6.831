@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <link href='http://fonts.googleapis.com/css?family=Sansita+One' rel='stylesheet' type='text/css'>
+
+		<link rel="stylesheet" href="css/bootstrap.min.css" type="text/css" media="screen" title="no title" charset="utf-8">
+		<link rel="stylesheet" href="css/style.css" type="text/css" media="screen" title="no title" charset="utf-8">
+		<link rel="stylesheet" href="css/bootstrap-responsive.min.css" type="text/css" media="screen" title="no title" charset="utf-8">
+		
+		
+		<!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+		<!--[if lt IE 9]>
+		<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+		<![endif]-->
+		
+		<script src="js/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="js/jquery.ui.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="js/bootstrap.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="js/handlebars.js" type="text/javascript" charset="utf-8"></script>
+		
+		<script type="text/javascript" charset="utf-8">
+		
+		String.prototype.toTitleCase = function () {
+		    return this.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+		};
+		
+		Handlebars.registerHelper('titleCase', function(value) {
+		  return value.toString().toTitleCase();
+		});
+		
+		Handlebars.registerHelper('upperCase', function(value) {
+		  return value.toString().toUpperCase();
+		});
+		
+		Handlebars.registerHelper('ifEmpty', function(value, options) {
+			if(Object.keys(value).length == 0) {
+				return options.fn();
+			}
+		});
+		
+		Handlebars.registerHelper('unlessEmpty', function(value, options) {
+			if(Object.keys(value).length != 0) {
+				return options.fn();
+			}
+		});
+		
+		
+		Handlebars.registerHelper('eachKeys', function(context, options) {
+		  var fn = options.fn, inverse = options.inverse;
+		  var ret = "";
+
+		  var empty = true;
+		  for (key in context) { empty = false; break; }
+
+		  if (!empty) {
+		    for (key in context) {
+		        ret = ret + fn({ 'key': key, 'value': context[key]});
+		    }
+		  } else {
+		    ret = inverse(this);
+		  }
+		  return ret;
+		});
+		
+		
+		
+		var delivery_location = "";
+		var truck = "";
+		var order = {};
+		
+		var delivery_location_template = null;
+		var truck_template = null;
+		var truck_menu_template = null;
+		var order_template = null;
+		var order_confirmation_template = null;
+		
+		var delivery_locations = [
+			{
+				"name": "Media Lab",
+				"description": "Delivered to the 5th floor cafe." 
+			}, {
+				"name": "Stata Center",
+				"description": "Delivered to the 4th floor lounge."
+			}, {
+				"name": "Koch Building",
+				"description": "Delivered to the lobby."
+			}
+		];
+		
+		var trucks = {
+			"clover": {
+				"sandwiches": [
+					{ 
+						"name": "BLT",
+						"price": 5,
+						"description": "Soy Bacon Lettuce, Tomatoes, Special Sauce"
+					}, {
+						"name": "Pimento",
+						"price": 5,
+					}, {
+						"name": "Egg & Eggplant",
+						"price": 5,
+					}
+				],
+				"drinks": [
+					{
+						"name": "Coffee",
+						"price": 2
+					}, {
+						"name": "Lemonade",
+						"price": 3
+					}
+				]
+			},
+			"city wok": {
+				"entrees": [
+					{
+						"name": "City Chicken",
+						"price": 5,
+						"description": "Very city"
+					}, {
+						"name": "City Beef",
+						"price": 5,
+						"description": "More city"
+					}, {
+						"name": "City Pork",
+						"price": 5,
+						"description": "All the city"
+					}
+				]
+			},
+			"ramen house": null
+		};
+		
+		function computeTotal() {
+			var total = 0;
+			for (var i in order) {
+				var item = order[i]
+				total += item.quantity * item.price
+			}
+			
+			return total
+		}
+		
+		function render() {
+			var index = $(".view:visible").index();
+			
+			$("#navigation-checkbox").hide();
+			
+			if(index == 0) {
+				$("#navigation").hide();
+			} else {
+				
+				if(index == 1) {
+					var source = delivery_location_template({delivery_locations: delivery_locations})
+					$("#delivery-locations").html(source)
+				}
+				
+				if(index == 2) {
+					var context = {
+						trucks: []
+					}
+					
+					for (key in trucks) {
+						var the_truck = {}
+						the_truck.name = key
+						if (trucks[key]) {
+							the_truck.enabled = true
+						} else {
+							the_truck.enabled = false
+						}
+						
+						context.trucks.push(the_truck)
+					}
+					
+					var source = truck_template(context)
+					$("#trucks").html(source);
+					
+					$("#trucks .disabled").tooltip({
+						title: "Coming Soon!"
+					})
+				}
+				
+				if(index == 3) {
+					name = truck
+					var source = truck_menu_template({name: name, menu: trucks[name]});
+					$("#truck-menu").html(source);
+					
+
+					
+					source = order_template({total: computeTotal(), order: order});
+					$("#order").html(source);
+					
+					if(computeTotal() == 0) {
+						$("#checkout").addClass("disabled");
+					} else {
+						$("#checkout").removeClass("disabled");
+					}
+				}
+				
+				if(index == 4) {
+					var source = order_confirmation_template({order: order});
+					$("#order-confirmation").html(source);
+					
+					$("#total-confirmation").html("$ " + computeTotal())
+					$("#delivery-location-confirmation").html(delivery_location)
+					
+					for(var i in delivery_locations) {
+						var location = delivery_locations[i]
+						
+						if (location.name == delivery_location) {
+							$("#delivery-location-instructions").html(location.description);
+							break;
+						}
+					}
+					
+					
+					
+				}
+				
+				if(index == 5) {
+					index = 4;
+					$("#navigation-checkbox").css("display", "inline");
+				}
+				
+				$("#navigation").show();
+				$("#navigation #navigation-image").css("background-image", "url(img/navigation_" + index + ".png)")
+			}
+		}
+				
+		function showNextView() {
+			var currentView = $(".view:visible");
+			var nextView = $(currentView).next(".view")
+			
+			if(nextView.length == 0) {
+				nextView = $("#views .view:first");
+			}
+			
+			$(currentView).hide();
+			$(nextView).show();
+			
+			render();
+		}
+		
+		function showPreviousView() {
+			var currentView = $(".view:visible");
+			var previousView = $(currentView).prev(".view")
+			
+			if(previousView.length == 0) {
+				previousView = $("#views .view:last");
+			}
+			
+			$(currentView).hide();
+			$(previousView).show();
+			
+			render();
+		}
+		
+		function compileTemplates() {
+			var source = $("#delivery-locations-template").html()
+			delivery_location_template = Handlebars.compile(source);
+			
+			source = $("#truck-template").html()
+			truck_template = Handlebars.compile(source);
+			
+			source = $("#truck-menu-template").html()
+			truck_menu_template = Handlebars.compile(source);
+			
+			source = $("#order-template").html()
+			order_template = Handlebars.compile(source);
+			
+			source = $("#order-confirmation-template").html()
+			order_confirmation_template = Handlebars.compile(source);
+		}
+		
+		function validateInfo() {
+			if($("#info-name").is(":valid") && $("#info-phone").is(":valid")) {
+				$("#place-order").removeClass("disabled")
+			} else {
+				$("#place-order").addClass("disabled")
+			}
+		}
+		
+		
+		
+		$(function() {
+			 
+			compileTemplates();
+			render();
+			
+			$("#info-name").keyup(function() {
+				validateInfo();
+				if ($(this).is(":valid")) {
+					$("#info-name-error").hide()
+				} else {
+					$("#info-name-error").show()
+				}
+			})
+			
+			$("#info-phone").keyup(function() {
+				validateInfo();
+				if ($(this).is(":valid")) {
+					$("#info-phone-error").hide()
+				} else {
+					$("#info-phone-error").show()
+				}
+			})
+			
+			$("a.delivery-location").live("click", function() {
+				delivery_location = $(this).data("name");
+			})
+			
+			$("a.truck").live("click", function() {
+				var new_truck = $(this).data("name");
+				if(new_truck != truck) {
+					order = {}
+				}
+				truck = new_truck
+			})
+			
+			$(".view .next").live("click", function() {
+				if($(this).hasClass('disabled')) {
+					return;
+				}
+				showNextView();
+			})
+			
+			$(".view .previous").live("click", function() {
+				showPreviousView();
+			})
+			
+			
+			$(".plus-one").live('click', function() {
+				var name = $(this).data("name")
+				var price = $(this).data("price")
+				
+				if(!order[name]) {
+					order[name] = {
+						price: price,
+						quantity: 0
+					}
+				}
+				
+				order[name].quantity++;
+				render();
+				
+				$("#order li.item[data-name='"+name+"']").effect("highlight", {}, 500);
+			})
+
+			
+			$(".minus-one").live('click', function() {
+				var name = $(this).data("name")
+				var price = $(this).data("price")
+				
+				if(order[name]) {
+					order[name].quantity--;
+					if(order[name].quantity == 0) {
+						delete order[name]
+					}
+					
+					render();
+					
+					$("#order li.item[data-name='"+name+"']").effect("highlight", {}, 500);
+				}
+			})
+			
+
+		
+		
+		})
+		</script>
+		
+		<title>GroupOrder!</title>
+	</head>
+	<body>
+		
+		<script id="delivery-locations-template" type="text/x-handlebars-template">
+			<center>
+				{{#each delivery_locations}}
+			  <p>
+					<a href="#" class="btn btn-danger btn-big next delivery-location" data-name="{{name}}">{{titleCase name}} &rarr;</a>
+				</p>
+				{{/each}}
+			</center>
+		</script>
+		
+		<script id="truck-template" type="text/x-handlebars-template">
+			<center>
+				{{#each trucks}}
+				<p>
+					<a href="#" class="btn btn-big {{#if enabled}} btn-danger next {{else}} disabled {{/if}} truck" data-name="{{name}}">{{titleCase name}} &rarr;</a>
+				</p>
+				{{/each}}
+				
+				<hr style="width:500px">
+				
+				<a href="#" class="btn btn-danger btn-large previous">
+					&larr; Change location
+				</a>
+			</center>
+		</script>
+		
+		<script id="truck-menu-template" type="text/x-handlebars-template">
+			<h2><b>{{upperCase name}}</b></h2>
+			
+			{{#eachKeys menu}}
+			<ul class="menu">
+				<h3>{{titleCase key}}</h3>
+				{{#each value}}
+					<li>
+						<a href="#" class="btn btn-danger plus-one" data-name="{{name}}" data-price="{{price}}"><i class="icon-arrow-up icon-white"></i></a> 
+						<span class="item-amount">$<span class="value">{{price}}</span></span>
+						<span class="item">{{name}}</span>
+						{{#if description}}
+							<p class="item-description">{{description}}</p>
+						{{/if}}
+					</li>
+					
+				{{/each}}
+			</ul>
+			{{/eachKeys}}
+		</script>
+		
+		<script id="order-template" type="text/x-handlebars-template">
+			<h3 class="item-headers">
+				{{#unlessEmpty order}}
+					<span class="item-info item-header"><span class="value">Qty.</span></span>
+					<span class="item-info item-header"><span class="value">Cost</span></span>
+				{{/unlessEmpty}}
+				Items
+			</h3>
+			
+			<ul class="menu" id="order">
+			
+				{{#ifEmpty order}}
+				<li class="no-items">
+					<center>No items</center>
+				</li>
+				{{/ifEmpty}}
+					
+				{{#eachKeys order}}
+
+					<li class="item" data-name="{{key}}">
+						<a href="#" class="btn btn-danger minus-one" data-name="{{key}}" ><i class="icon-arrow-down icon-white"></i></a> 
+						<span class="item-info"><span class="value">x {{value.quantity}}</span></span>
+						<span class="item-info"><span class="value">${{value.price}}</span></span>
+						<span class="item">{{key}}</span>
+					</li>
+				{{/eachKeys}}
+				
+			</ul>
+			<div id="order-total">
+				<h3><span class="pull-right" id="order-total-amount"><span class="order-total">Total:</span> $<span class="value"> {{total}}</span></span></h3>
+			</div>
+		</script>
+
+		<script id="order-confirmation-template" type="text/x-handlebars-template">
+		<h3 class="item-headers">
+			{{#unlessEmpty order}}
+				<span class="item-info item-header"><span class="value">Qty.</span></span>
+				<span class="item-info item-header"><span class="value">Cost</span></span>
+			{{/unlessEmpty}}
+			Items
+		</h3>
+		
+		<ul class="menu" id="order">
+		
+			{{#ifEmpty order}}
+			<li class="no-items">
+				<center>No items</center>
+			</li>
+			{{/ifEmpty}}
+				
+			{{#eachKeys order}}
+
+				<li class="item" data-name="{{key}}">
+					<span class="item-info"><span class="value">x {{value.quantity}}</span></span>
+					<span class="item-info"><span class="value">${{value.price}}</span></span>
+					<span class="item">{{key}}</span>
+				</li>
+			{{/eachKeys}}
+			
+		</ul>
+		
+		</script>
+		
+		<div id="page" class="container">
+			<header>
+				<div id="logo">
+					<h1><a href="./index.html"><img src="img/logo.png"></a></h1>
+				</div>
+			</header>
+			<div id="content">
+				<div id="navigation">
+					<div id="navigation-image"></div>
+					<div id="navigation-checkbox"> &#10003;</div>
+				</div>
+				<div id="views">
+					<div class="view">
+						<ol id="instructions">
+							<li><strong>ORDER</strong> food by 11:00 <strong>today</strong>.</li>
+							<li><strong>DELIVERED</strong> to you by 12:30.</li>
+							<li><strong>EAT</strong> with your colleagues.</li>
+						</ol>
+						<center>
+							<a href="#" class="btn btn-danger next btn-big">Let's Go!</a>
+						</center>
+					</div>
+					<div class="view">
+						<center>
+							<h2><b>WHERE</b> do you want your food?</h2>
+						</center>
+						<div id="delivery-locations"></div>
+					</div>
+					<div class="view">
+						<center>
+							<h2><b>CHOOSE</b> your truck</h2>
+						</center>
+						<div id="trucks"></div>
+					</div>
+					<div class="view">
+						<div class="row">
+							<div class="span6">
+								<div id="truck-menu"></div>
+							</div>
+							<div class="span6">
+								<h2><b>YOUR ORDER</b></h2>
+								<div id="order"></div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="span12">
+								<a href="#" id="checkout" class="pull-right btn btn-danger btn-large next disabled">
+									Checkout &rarr; 
+								</a>
+								<a href="#" class="btn btn-danger btn-large previous">
+									&larr; Change truck
+								</a>
+							</div>
+						</div>
+					</div>
+					<div class="view">
+						<div class="row">
+							<div class="span6">
+								<h2><b>YOUR ORDER</b></h2>
+								<div id="order-confirmation"></div>
+							</div>
+							<div class="span6">
+								<h2><b>YOUR INFO</b></h2>
+								<form class="form-horizontal your-info" method="post" action= "" id="info-form">
+									<div class="control-group">
+										<label class="control-label">Your Total</label>
+										<div class="controls">
+											<label class="control-content" id="total-confirmation">$ 20</label>
+										</div>
+									</div>
+									<div class="control-group">
+										<label class="control-label">Your Location</label>
+										<div class="controls">
+												<label class="control-content" id="delivery-location-confirmation">Media Lab</label>
+											<p class="help-block" id="delivery-location-instructions">We'll text you when your food is ready.</p>
+							      </div>
+									</div>
+								    <div class="control-group">
+								      <label class="control-label">Your Name</label>
+								      <div class="controls">
+								        <input type="text" id="info-name" required class="input-xlarge" />
+												<p id="info-name-error" class="help-block" style="color:#FF0000; font-style:italic;">Please enter your name.</p>
+								      </div>
+								    </div>
+								    <div class="control-group">
+								      <label class="control-label">Mobile Number</label>
+								      <div class="controls">
+								        <input type="tel" id="info-phone" required pattern="((\d{3})|(\(\d{3}\)))(\s+|-)?\d{3}(\s+|-)?\d{4}" class="input-xlarge" />
+								        <p class="help-block">We'll text you when your food is ready.</p>
+												<p id="info-phone-error" class="help-block" style="color:#FF0000; font-style:italic;">Please enter a valid phone number (e.g. 987-555-1234).</p>
+								      </div>
+								    </div>
+								</form>
+							</div>
+						</div>
+						<div class="row">
+							<div class="span12">
+								<a href="#" id="place-order" class="pull-right btn btn-danger btn-large next disabled">
+									Place Order &rarr; 
+								</a>
+								<a href="#" class="btn btn-danger btn-large previous">
+									&larr; Edit Order
+								</a>
+							</div>
+						</div>
+					</div>
+					<div class="view">
+						<div class="row">
+						<div class="span6">
+							<div id="smiley">:-)</div>
+						</div>
+						<div class="span6">
+							<div id="thanks">
+								<h1>Thanks!</h1>
+								<p>We'll send you a confirmation and pick up instructions via SMS. If you need to get a hold of us call <a href="tel:602-721-4597">602-721-4597</a></p>
+								<p>&nbsp;</p>
+								<a href="./index.html" id="checkout" class="btn btn-danger btn-large next">Go Home</a>
+							</div>
+						</div>
+						</div>
+					</div>
+					<div class="clear"></div>
+				</div>
+			</div>
+			<footer>
+				&copy; 2012 GroupOrder.
+			</footer>
+		</div>
+	</body>
+</html>

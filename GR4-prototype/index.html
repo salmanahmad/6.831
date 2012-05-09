@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <link href='http://fonts.googleapis.com/css?family=Sansita+One' rel='stylesheet' type='text/css'>
+
+		<link rel="stylesheet" href="css/bootstrap.min.css" type="text/css" media="screen" title="no title" charset="utf-8">
+		<link rel="stylesheet" href="css/style.css" type="text/css" media="screen" title="no title" charset="utf-8">
+		<link rel="stylesheet" href="css/bootstrap-responsive.min.css" type="text/css" media="screen" title="no title" charset="utf-8">
+		
+		<!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+		<!--[if lt IE 9]>
+		<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+		<![endif]-->
+		
+		<script src="js/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="js/bootstrap.min.js" type="text/javascript" charset="utf-8"></script>
+		
+		
+		<script type="text/javascript" charset="utf-8">
+		
+		
+		var view_count = 0;
+		function updateNavBar() {
+		
+			switch(view_count)
+			{
+			case 0: {
+				$("#nav_item_location").addClass("inactive");
+				$("#nav_item_menu").addClass("inactive");
+				$("#nav_item_checkout").addClass("inactive");
+				
+				$("#right_arrow_location").css("background-image", 'url(img/arrow-hollow.png)');
+				$("#right_arrow_menu").css("background-image", "url(img/arrow-hollow.png)");
+				$("#right_arrow_checkout").css("background-image", "url(img/arrow-hollow.png)");
+				
+				$("#nav_item_checkmark").hide();
+				break;
+			}
+			case 1: {
+				$("#nav_item_location").removeClass("inactive");
+				$("#nav_item_menu").addClass("inactive");
+				$("#nav_item_checkout").addClass("inactive");
+				
+				$("#right_arrow_location").css("background-image", "url(img/arrow.png)");
+				$("#right_arrow_menu").css("background-image", "url(img/arrow-hollow.png)");
+				$("#right_arrow_checkout").css("background-image", "url(img/arrow-hollow.png)");
+
+				$('#nav_item_checkmark').hide();
+				break;
+			}
+			case 2: {
+				$("#nav_item_location").removeClass("inactive");
+				$("#nav_item_menu").removeClass("inactive");
+				$("#nav_item_checkout").addClass("inactive");
+				
+				$("#right_arrow_location").css("background-image", "url(img/arrow.png)");
+				$("#right_arrow_menu").css("background-image", "url(img/arrow.png)");
+				$("#right_arrow_checkout").css("background-image", "url(img/arrow-hollow.png)");
+
+				$('#nav_item_checkmark').hide();
+				break;
+			}
+			case 3: {
+				$("#nav_item_location").removeClass("inactive");
+				$("#nav_item_menu").removeClass("inactive");
+				$("#nav_item_checkout").removeClass("inactive");
+				$('#nav_item_checkmark').hide();
+				
+				$("#right_arrow_location").css("background-image", "url(img/arrow.png)");
+				$("#right_arrow_menu").css("background-image", "url(img/arrow.png)");
+				$("#right_arrow_checkout").css("background-image", "url(img/arrow.png)");
+
+				break;
+			}
+			case 4: {
+				$("#nav_item_location").removeClass("inactive");
+				$("#nav_item_menu").removeClass("inactive");
+				$("#nav_item_checkout").removeClass("inactive");
+				
+				$("#right_arrow_location").css("background-image", "url(img/arrow.png)");
+				$("#right_arrow_menu").css("background-image", "url(img/arrow.png)");
+				$("#right_arrow_checkout").css("background-image", "url(img/arrow.png)");
+
+				$('#nav_item_checkmark').show();
+				break;
+			}
+			}
+
+		}
+				
+				
+		function showNextView() {
+			var currentView = $(".view:visible");
+			var nextView = $(currentView).next(".view")
+			
+			view_count++;
+			
+			if(nextView.length == 0) {
+				view_count = 0;
+				nextView = $("#views .view:first");
+			}
+			
+			$(currentView).hide();
+			$(nextView).show();
+			
+			updateNavBar();
+		}
+		
+		function showPreviousView() {
+			var currentView = $(".view:visible");
+			var previousView = $(currentView).prev(".view")
+			
+			view_count--;
+			if(previousView.length == 0) {
+				view_count = 0;
+				previousView = $("#views .view:last");
+			}
+			
+			$(currentView).hide();
+			$(previousView).show();
+			
+			updateNavBar();
+		}
+		
+		
+		
+		
+		function updateOrderConfirmation() {
+			
+			$("#order-confirmation").html("")
+			
+			$("#order > .item").each(function() {
+				
+				var value = $(this).find(".item-amount").find(".value").html();
+				var name = $(this).find(".item").html();
+				var quantity = $(this).find(".item-q").find(".item-quantity").html();
+
+				var item = $("<li></li>")
+				$(item).append('<span class="item-amount">$<span class="value">' + value + '</span></span>');
+				$(item).append('<span class="item">' + name + '</span>');
+				$(item).append('<span class="item-q"> (<span class="item-quantity">' + quantity + '</span>)</span>');
+				
+
+				$("#order-confirmation").append(item)
+				
+			})
+			
+			
+		}
+		
+		function validateInfo() {
+			if($("#info-name").is(":valid") && $("#info-phone").is(":valid")) {
+				$("#place-order").removeClass("disabled")
+			} else {
+				$("#place-order").addClass("disabled")
+			}
+		}
+		
+		$(function() {
+			 
+			
+			
+			$("#info-name").keyup(function() {
+				validateInfo();
+				if ($(this).is(":valid")) {
+					$("#info-name-error").hide()
+				} else {
+					$("#info-name-error").show()
+				}
+			})
+			
+			$("#info-phone").keyup(function() {
+				validateInfo();
+				if ($(this).is(":valid")) {
+					$("#info-phone-error").hide()
+				} else {
+					$("#info-phone-error").show()
+				}
+			})
+			
+			$("#place-order").addClass("disabled")
+			
+			$(".view .next").click(function() {
+				if($(this).hasClass('disabled')) {
+					return;
+				}
+				showNextView();
+			})
+			
+			$(".view .previous").click(function() {
+				showPreviousView();
+			})
+			
+			$(".minus-one").live('click', function() {
+				var value = $(this).nextAll(".item-amount").find(".value").html();
+				var quantity = $(this).nextAll(".item-q").find(".item-quantity").html();
+				var name= $(this).nextAll(".item").html();
+				
+				var current_total = parseFloat($('#order-total-amount .value').html());
+				current_total -= parseFloat(value)/parseFloat(quantity);
+				
+				$('#order-total-amount .value').html(current_total)
+				
+				if (parseFloat(quantity) > 1){
+					
+				$(this).parent().remove();
+				value = parseFloat(value) - parseFloat(value)/parseFloat(quantity)
+				quantity -= parseFloat(1)
+					var item = $("<li class='item'></li>")
+					$(item).append('<a href="#" class="btn btn-danger minus-one">-1</a>');
+					$(item).append('<span class="item-amount">$<span class="value">' + value + '</span></span>');
+					$(item).append('<span class="item">' + name + '</span>');
+					$(item).append('<span class="item-q"> (<span class="item-quantity">' + quantity + '</span>)</span>');
+
+					$("#order").append(item)	
+				}
+				else {
+				$(this).parent().remove();
+				if($("#order li").size() == 1) {
+					$(".no-items").show();
+					$("#checkout").addClass("disabled")
+				}
+			}
+				updateOrderConfirmation();
+				
+			})
+			
+			$(".plus-one").click(function() {
+				$(".no-items").hide();
+				$("#checkout").removeClass("disabled")
+				
+				var value = $(this).nextAll(".item-amount").find(".value").html();
+				var name = $(this).nextAll(".item").html();
+				var quantity=parseFloat(1);
+				
+				
+				var current_total = parseFloat($('#order-total-amount .value').html());
+				current_total += parseFloat(value);
+			
+				$('#order-total-amount .value').html(current_total)
+				if($("#order li").size() < 2) {
+					
+				var item = $("<li class='item'></li>")
+				$(item).append('<a href="#" class="btn btn-danger minus-one">-1</a>');
+				$(item).append('<span class="item-amount">$<span class="value">' + value + '</span></span>');
+				$(item).append('<span class="item">' + name + '</span>');
+				$(item).append('<span class="item-q"> (<span class="item-quantity">' + 1 + '</span>)</span>');
+				
+				$("#order").append(item)
+				}
+				else {
+					
+					$("#order > .item").each(function() {
+						
+						var v2 = $(this).find(".item-amount").find(".value").html();
+						var n2 = $(this).find(".item").html();
+						var q2 = $(this).find(".item-q").find(".item-quantity").html();
+						if (name==n2){
+							quantity += parseFloat(q2)
+							value = parseFloat(value) + parseFloat(v2)
+							$(this).remove();
+					
+							
+						}
+						else {
+							
+						}
+					})
+					var item = $("<li class='item'></li>")
+					$(item).append('<a href="#" class="btn btn-danger minus-one">-1</a>');
+					$(item).append('<span class="item-amount">$<span class="value">' + value + '</span></span>');
+					$(item).append('<span class="item">' + name + '</span>');
+					$(item).append('<span class="item-q"> (<span class="item-quantity">' + quantity + '</span>)</span>');
+					$("#order").append(item)
+				
+							
+				}
+				
+				updateOrderConfirmation();
+				
+			})
+			
+
+		
+		
+		})
+		</script>
+		
+		<title>GroupOrder!</title>
+	</head>
+	<body>
+		<div id="page" class="container">
+			<header>
+				<div id="logo">
+					<h1><a href="./index.html">GroupOrder</a></h1>
+				</div>
+			</header>
+			<div id="content">
+				<div id="navigation">
+					
+					<center>					
+					
+					<div id="nav_container">
+					<div class="nav_item inactive nav_item_left" id="nav_item_location">Location <div id = "right_arrow_location" class="right_arrow"></div></div>
+					<div class="nav_item inactive" id="nav_item_menu">Menu<div id="right_arrow_menu" class="right_arrow"></div></div>
+					<div class="nav_item inactive" id="nav_item_checkout">Checkout<div id="right_arrow_checkout" class="right_arrow"></div>
+					
+					<div style="font-size:48px; position: relative; position: relative; left: 250px; top: -15px; color:#23AD17; width: 50px; font-weight: bold; display:none;" id="nav_item_checkmark"> &#10003;</div>
+					</div>
+					
+					</center>
+					
+					<div class="clear"></div>
+
+				</div>
+				
+
+					
+				<div id="views">
+					<div class="view">
+						<ol id="instructions">
+							<li><strong>ORDER</strong> food by 11:00.</li>
+							<li><strong>DELIVERED</strong> to your lab at 12:30</li>
+							<li><strong>EAT</strong> with your colleagues</li>
+						</ol>
+						<center>
+							<a href="#" class="btn btn-danger next btn-big">Let's Go!</a>
+						</center>
+					</div>
+					
+					<div class="view">
+						<center>
+							<h2><b>CHOOSE</b> your truck</h2>
+						</center>
+						
+						<center>
+							<p>
+								<a href="#" class="btn btn-danger next btn-big">Clover &rarr;</a>
+							</p>
+							
+							<p>
+								<a href="#" class="btn btn disabled btn-big">Ramen House &rarr;</a>
+							</p>
+							
+						</center>
+					</div>
+					
+					<div class="view">
+						<div class="row">
+							<div class="span6">
+								<h2><b>CLOVER</b></h2>
+								<h3>Sandwiches</h3>
+								<ul class="menu">
+									<li>
+										<a href="#" class="btn btn-danger plus-one">+1</a> 
+										<span class="item-amount">$<span class="value">5</span></span>
+										<span class="item">BLT</span>
+									</li>
+									<li>
+										<a href="#" class="btn btn-danger plus-one">+1</a> 
+										<span class="item-amount">$<span class="value">5</span></span>
+										<span class="item">Pimeto</span>
+									</li>
+									<li>
+										<a href="#" class="btn btn-danger plus-one">+1</a>
+										<span class="item-amount">$<span class="value">5</span></span>
+										<span class="item">Egg + Eggplant</span>
+									</li>
+								</ul>
+								<h3>Drinks</h3>
+								<ul class="menu">
+									<li>
+										<a href="#" class="btn btn-danger plus-one">+1</a> 
+										<span class="item-amount">$<span class="value">2</span></span>
+										<span class="item">Coffee</span>
+									</li>
+								</ul>
+							</div>
+							<div class="span6">
+								<h2><b>YOUR ORDER</b></h2>
+								<h3>Items</h3>
+								<ul class="menu" id="order">
+									<li class="no-items">
+										<center>No items</center>
+									</li>
+								</ul>
+								<div id="order-total">
+									<h3><span class="pull-right" id="order-total-amount">$<span class="value">0</span></span></h3>
+									<h3>Total</h3>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="span12">
+								<a href="#" id="checkout" class="pull-right btn btn-danger btn-large next disabled">
+									Checkout &rarr; 
+								</a>
+								<a href="#" class="btn btn-danger btn-large previous">
+									&larr; Back to location.
+								</a>
+							</div>
+						</div>
+					</div>
+
+
+
+
+					<div class="view">
+						<div class="row">
+							<div class="span6">
+								<h2><b>YOUR ORDER</b></h2>
+								<ul class="menu" id="order-confirmation">
+								</ul>
+								<div id="order-total">
+									<h3><span class="pull-right" id="order-total-amount">$<span class="value">0</span></span></h3>
+									<h3>Total</h3>
+								</div>
+								
+							</div>
+							<div class="span6">
+								<h2><b>YOUR INFO</b></h2>
+								
+								<form class="form-horizontal your-info" method="post" action= "" id="info-form">
+								    <div class="control-group">
+								      <label class="control-label">Your Name</label>
+								      <div class="controls">
+								        <input type="text" id="info-name" required class="input-xlarge" />
+												<p id="info-name-error" class="help-block" style="color:#FF0000; font-style:italic;">Please enter your name.</p>
+								
+								      </div>
+								    </div>
+								    <div class="control-group">
+								      <label class="control-label">Mobile Number</label>
+								      <div class="controls">
+								        <input type="tel" id="info-phone" required pattern="((\d{3})|(\(\d{3}\)))(\s+|-)?\d{3}(\s+|-)?\d{4}" class="input-xlarge" />
+								        <p class="help-block">For delivery notification.</p>
+												<p id="info-phone-error" class="help-block" style="color:#FF0000; font-style:italic;">Please enter a valid phone number.</p>
+								
+								      </div>
+								    </div>
+								</form>
+								
+								
+							</div>
+						</div>
+						<div class="row">
+							<div class="span12">
+								<a href="#" id="place-order" class="pull-right btn btn-danger btn-large next">
+									Place Order &rarr; 
+								</a>
+								<a href="#" class="btn btn-danger btn-large previous">
+									&larr; Edit Order
+								</a>
+							</div>
+						</div>
+					</div>
+
+
+
+					<div class="view">
+						<div class="row">
+						<div class="span6">
+							<div id="smiley">:-)</div>
+						</div>
+						<div class="span6">
+							<div id="thanks">
+								<h1>Thanks for your order</h1>
+								<a href="./index.html" id="checkout" class="btn btn-danger btn-large next">Go Home</a>
+							</div>
+						</div>
+						</div>
+					</div>
+
+
+					<div class="clear"></div>
+
+
+				</div>
+				
+			</div>
+			<footer>
+				&copy; 2012 GroupOrder.
+			</footer>
+		</div>
+	</body>
+</html>
